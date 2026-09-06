@@ -1,0 +1,19 @@
+{
+  "name": "gladys-ecoflow",
+  "version": "1.0.0",
+  "description": "Gladys Assistant external integration for EcoFlow RIVER 2 power stations",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@gladysassistant/integration-sdk": "^0.12.0",
+    "mqtt": "^5.15.2"
+  },
+  "license": "MIT"
+}
