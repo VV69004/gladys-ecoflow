@@ -1,0 +1,241 @@
+{
+  "manifest_version": 1,
+  "type": "device",
+  "name": "EcoFlow",
+  "description": {
+    "en": "Monitor your EcoFlow RIVER 2 power station from Gladys.",
+    "fr": "Surveillez votre batterie EcoFlow RIVER 2 depuis Gladys."
+  },
+  "version": "1.0.0",
+  "docker_image": "ghcr.io/vous/gladys-ecoflow:v1.0.0",
+  "gladys_version": ">=4.86.0",
+  "categories": ["energy"],
+  "transports": ["cloud"],
+  "config_schema": [
+    {
+      "key": "connection_mode",
+      "type": "select",
+      "label": { "en": "Connection mode", "fr": "Mode de connexion" },
+      "required": true,
+      "default": "developer_api",
+      "description": {
+        "en": "'Developer API' is the official, documented method — but EcoFlow's own catalog (developer-eu.ecoflow.com/us/document/introduction) does NOT list the plain 'River 2' (only 'River 2 Pro'), confirmed to fail with 'error 1006: current device is not allowed to get device info' for that exact model. 'App login (unofficial)' authenticates with your EcoFlow app email/password instead and reads data the same way the app itself does — works for the base River 2, unofficial but confirmed fully autonomous (no need to keep the mobile app open).",
+        "fr": "'Developer API' est la méthode officielle documentée — mais le catalogue d'EcoFlow (developer-eu.ecoflow.com/us/document/introduction) ne liste pas le River 2 de base (seulement 'River 2 Pro'), confirmé en échec avec 'error 1006: current device is not allowed to get device info' pour ce modèle précis. 'Connexion appli (non officiel)' s'authentifie avec l'email/mot de passe de votre appli EcoFlow et lit les données comme l'appli elle-même — fonctionne pour le River 2 de base, non officiel mais confirmé pleinement autonome (pas besoin de garder l'appli mobile ouverte)."
+      },
+      "options": [
+        { "value": "developer_api", "label": { "en": "Developer API (official)", "fr": "Developer API (officiel)" } },
+        { "value": "app_login", "label": { "en": "App login (unofficial, for unsupported models)", "fr": "Connexion appli (non officiel, pour modèles non supportés)" } }
+      ]
+    },
+    {
+      "key": "intro",
+      "type": "section",
+      "label": { "en": "Developer API setup", "fr": "Configuration Developer API" },
+      "description": {
+        "en": "Create a free EcoFlow Developer account, create an app, and copy your Access Key and Secret Key below. Approval can take a few days. Then find your RIVER 2 serial number in the EcoFlow app (Device > Settings).",
+        "fr": "Créez un compte développeur EcoFlow gratuit, créez une application, puis copiez ci-dessous votre Access Key et votre Secret Key. La validation peut prendre quelques jours. Retrouvez le numéro de série de votre RIVER 2 dans l'appli EcoFlow (Appareil > Paramètres)."
+      },
+      "links": [
+        { "url": "https://developer-eu.ecoflow.com/us/document/introduction", "label": { "en": "EcoFlow Developer docs", "fr": "Doc développeur EcoFlow" } }
+      ]
+    },
+    {
+      "key": "region",
+      "type": "select",
+      "label": { "en": "API region", "fr": "Région de l'API" },
+      "required": true,
+      "default": "eu",
+      "options": [
+        { "value": "eu", "label": { "en": "Europe", "fr": "Europe" } },
+        { "value": "us", "label": { "en": "United States", "fr": "États-Unis" } }
+      ]
+    },
+    {
+      "key": "access_key",
+      "type": "secret",
+      "label": { "en": "Access Key", "fr": "Access Key" },
+      "required": false
+    },
+    {
+      "key": "secret_key",
+      "type": "secret",
+      "label": { "en": "Secret Key", "fr": "Secret Key" },
+      "required": false
+    },
+    {
+      "key": "app_login_intro",
+      "type": "section",
+      "label": { "en": "App login setup (only used in 'App login' mode)", "fr": "Configuration connexion appli (uniquement en mode 'Connexion appli')" },
+      "description": {
+        "en": "The exact same email/password you use to log into the EcoFlow mobile app. Nothing is sent anywhere except EcoFlow's own servers (the same login endpoint the app itself uses). Uses the same 'API region' field above — EcoFlow strictly separates accounts by region at login, so an EU account tested against the wrong region fails with 'Account doesn't exist or incorrect password' even with correct credentials.",
+        "fr": "Le même email/mot de passe que celui utilisé pour vous connecter à l'appli mobile EcoFlow. Rien n'est envoyé ailleurs que vers les serveurs EcoFlow eux-mêmes (le même point de connexion que l'appli utilise). Utilise le même champ \"Région de l'API\" ci-dessus — EcoFlow sépare strictement les comptes par région à la connexion, donc un compte européen testé sur la mauvaise région échoue avec \"Account doesn't exist or incorrect password\" même avec les bons identifiants."
+      }
+    },
+    {
+      "key": "ecoflow_email",
+      "type": "string",
+      "label": { "en": "EcoFlow account email", "fr": "Email du compte EcoFlow" },
+      "required": false
+    },
+    {
+      "key": "ecoflow_password",
+      "type": "secret",
+      "label": { "en": "EcoFlow account password", "fr": "Mot de passe du compte EcoFlow" },
+      "required": false
+    },
+    {
+      "key": "serial_number",
+      "type": "string",
+      "label": { "en": "RIVER 2 serial number", "fr": "Numéro de série de la RIVER 2" },
+      "description": {
+        "en": "Optional in Developer API mode (auto-discovered). REQUIRED in App login mode — there is no device-list API for that mode, find it in the EcoFlow app (Device > Settings).",
+        "fr": "Optionnel en mode Developer API (découvert automatiquement). OBLIGATOIRE en mode Connexion appli — il n'existe pas d'API de liste d'appareils pour ce mode, trouvez-le dans l'appli EcoFlow (Appareil > Paramètres)."
+      },
+      "placeholder": { "en": "R621ZEB4XXXXXXXX", "fr": "R621ZEB4XXXXXXXX" },
+      "required": false
+    },
+    {
+      "key": "advanced",
+      "type": "section",
+      "label": { "en": "Advanced: enable control (experimental)", "fr": "Avancé : activer le contrôle (expérimental)" },
+      "description": {
+        "en": "By default this integration is read-only (safe). In App login mode, control uses fixed, built-in commands (AC and 12V/car outputs) — just enable the toggle below, no code to enter. In Developer API mode, EcoFlow does not publish a per-model command reference, so the exact 'cmdCode' for switching outputs can vary by firmware — see the documentation for how to find yours. A real, fully hardware-level factory reset (hold the AC and DC buttons together for ~5 seconds — confirmed for the base River 2's 3-button front panel) always remains available regardless of anything sent from here.",
+        "fr": "Par défaut, cette intégration est en lecture seule (sans risque). En mode Connexion appli, le contrôle utilise des commandes fixes intégrées (sorties AC et 12V) — activez simplement l'interrupteur ci-dessous, aucun code à saisir. En mode Developer API, EcoFlow ne publie pas de référence de commandes par modèle : le 'cmdCode' exact peut varier selon le firmware — voir la documentation pour trouver le vôtre. Une vraie réinitialisation matérielle (appui simultané sur les boutons AC et DC pendant ~5 secondes — confirmé pour la façade à 3 boutons du River 2 de base) reste toujours disponible, quoi que cette intégration envoie."
+      }
+    },
+    {
+      "key": "price_per_kwh_tenthousandths",
+      "type": "number",
+      "label": { "en": "Electricity price (ten-thousandths of €, per kWh)", "fr": "Prix de l'électricité (dix-millièmes d'€, par kWh)" },
+      "description": {
+        "en": "In ten-thousandths of a currency unit, as a whole number — e.g. 2142 for €0.2142/kWh (a real French peak-hour rate). Gladys' number fields only accept integers (confirmed against the official manifest schema, no decimal/step support exists), and real electricity tariffs need 4 decimal places. Used only to estimate savings from solar charging, a rough estimate, not a precise energy audit. Leave blank to disable the savings feature (the cumulative energy total is still tracked either way).",
+        "fr": "En dix-millièmes d'unité monétaire, sous forme de nombre entier — par ex. 2142 pour 0,2142€/kWh (un vrai tarif heures pleines français). Les champs numériques de Gladys n'acceptent que des entiers (confirmé sur le schéma officiel du manifeste, aucun support de décimale/pas n'existe), et les vrais tarifs d'électricité ont besoin de 4 décimales. Utilisé uniquement pour estimer les économies liées à la charge solaire, une estimation approximative, pas un audit énergétique précis. Laissez vide pour désactiver l'estimation d'économies (le cumul d'énergie reste suivi dans tous les cas)."
+      },
+      "required": false
+    },
+    {
+      "key": "enable_control",
+      "type": "boolean",
+      "label": { "en": "Enable control (experimental)", "fr": "Activer le contrôle (expérimental)" },
+      "default": false
+    },
+    {
+      "key": "ac_command_code",
+      "type": "string",
+      "label": { "en": "AC output cmdCode (Developer API mode only)", "fr": "cmdCode de la sortie AC (mode Developer API uniquement)" },
+      "required": false
+    },
+    {
+      "key": "car_command_code",
+      "type": "string",
+      "label": { "en": "12V/car output cmdCode (Developer API mode only)", "fr": "cmdCode de la sortie 12V (mode Developer API uniquement)" },
+      "required": false
+    }
+  ],
+  "actions": [
+    {
+      "key": "dump_raw_quota",
+      "label": { "en": "Debug: dump accumulated MQTT quota (app login mode)", "fr": "Debug : afficher le quota MQTT accumulé (mode connexion appli)" },
+      "description": {
+        "en": "App login mode only. Logs every field received so far over MQTT for your device — use this to check whether data is arriving at all, and adjust device-river2.js's field names if the values shown on the dashboard stay empty.",
+        "fr": "Mode connexion appli uniquement. Journalise tous les champs reçus jusqu'ici via MQTT pour votre appareil — utilisez ceci pour vérifier si des données arrivent, et ajuster les noms de champs dans device-river2.js si les valeurs affichées restent vides."
+      },
+      "timeout_seconds": 15
+    },
+    {
+      "key": "set_solar_energy_total",
+      "label": { "en": "Set/adjust the cumulative solar energy counter", "fr": "Régler/ajuster le compteur d'énergie solaire cumulée" },
+      "description": {
+        "en": "App login mode only. Overwrites the running solar energy counter — use this to restore a value lost after deleting and reinstalling the integration (the counter is tied to this specific installation and does not survive a full reinstall), or to correct any drift. In Wh, not kWh, as a whole number (Gladys' number fields don't accept decimals) — e.g. 800 to restore 0.8 kWh.",
+        "fr": "Mode connexion appli uniquement. Écrase le compteur d'énergie solaire cumulée en cours — utilisez ceci pour restaurer une valeur perdue après suppression et réinstallation de l'intégration (le compteur est lié à cette installation précise et ne survit pas à une réinstallation complète), ou pour corriger un écart. En Wh, pas en kWh, sous forme de nombre entier (les champs numériques de Gladys n'acceptent pas les décimales) — par ex. 800 pour restaurer 0,8 kWh."
+      },
+      "fields": [
+        {
+          "key": "wh",
+          "type": "number",
+          "label": { "en": "New total (Wh)", "fr": "Nouveau total (Wh)" },
+          "min": 0,
+          "max": 1000000000,
+          "required": true
+        }
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "key": "set_ac_charging_power",
+      "label": { "en": "Set AC charging power limit (experimental control)", "fr": "Régler la limite de puissance de charge AC (contrôle expérimental)" },
+      "description": {
+        "en": "App login mode only, requires control enabled. Limits how fast the device recharges from AC/grid power (100-360W) — NOT a solar limit, EcoFlow's own community-maintained integrations do not expose a separate solar charging limit for this model; solar input is not software-limited on the River 2. UNTESTED against a real device — start cautiously.",
+        "fr": "Mode connexion appli uniquement, nécessite le contrôle activé. Limite la vitesse de recharge sur secteur AC (100-360W) — PAS une limite solaire : les intégrations communautaires établies pour EcoFlow n'exposent pas de limite de charge solaire distincte pour ce modèle, l'entrée solaire n'est pas limitée par logiciel sur le River 2. Non testé en conditions réelles — à utiliser avec prudence."
+      },
+      "fields": [
+        {
+          "key": "watts",
+          "type": "number",
+          "label": { "en": "Charging power (W)", "fr": "Puissance de charge (W)" },
+          "min": 100,
+          "max": 360,
+          "required": true
+        }
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "key": "set_max_charge_level",
+      "label": { "en": "Set maximum charge level", "fr": "Régler le niveau de charge maximum" },
+      "description": {
+        "en": "App login mode only, requires control enabled. The battery stops charging once it reaches this level (50-100%) — matches the 'Charge Limit' shown in the official EcoFlow app's Energy Management screen. UNTESTED against a real device.",
+        "fr": "Mode connexion appli uniquement, nécessite le contrôle activé. La batterie cesse de se recharger une fois ce niveau atteint (50-100%) — correspond à la 'Limite de charge' de l'écran Gestion de l'énergie de l'appli officielle EcoFlow. Non testé en conditions réelles."
+      },
+      "fields": [
+        {
+          "key": "percent",
+          "type": "number",
+          "label": { "en": "Max charge level (%)", "fr": "Niveau de charge max (%)" },
+          "min": 50,
+          "max": 100,
+          "required": true
+        }
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "key": "set_min_discharge_level",
+      "label": { "en": "Set minimum discharge level", "fr": "Régler le niveau de décharge minimum" },
+      "description": {
+        "en": "App login mode only, requires control enabled. The battery stops providing power once it reaches this level (0-30%) — matches the 'Discharge Limit' shown in the official EcoFlow app's Energy Management screen. UNTESTED against a real device.",
+        "fr": "Mode connexion appli uniquement, nécessite le contrôle activé. La batterie cesse de fournir de l'énergie une fois ce niveau atteint (0-30%) — correspond à la 'Limite de décharge' de l'écran Gestion de l'énergie de l'appli officielle EcoFlow. Non testé en conditions réelles."
+      },
+      "fields": [
+        {
+          "key": "percent",
+          "type": "number",
+          "label": { "en": "Min discharge level (%)", "fr": "Niveau de décharge min (%)" },
+          "min": 0,
+          "max": 30,
+          "required": true
+        }
+      ],
+      "timeout_seconds": 15
+    },
+    {
+      "key": "set_backup_reserve_level",
+      "label": { "en": "Set backup reserve level (solar priority threshold)", "fr": "Régler le niveau de réserve de secours (seuil de priorité solaire)" },
+      "description": {
+        "en": "App login mode only, requires control enabled, requires the backup reserve switch to be enabled first. Below this level, the battery recharges from AC/grid AND solar; above it, only from solar — matches the official app's Backup Reserve slider (5-100%, must stay between your min discharge and max charge levels). This IS the real 'solar priority' control for this model. UNTESTED against a real device.",
+        "fr": "Mode connexion appli uniquement, nécessite le contrôle activé, nécessite l'interrupteur de réserve de secours activé au préalable. En dessous de ce niveau, la batterie se recharge sur secteur ET solaire ; au-dessus, uniquement au solaire — correspond au curseur de réserve de secours de l'appli officielle (5-100%, doit rester entre vos niveaux de décharge min et charge max). C'est le vrai contrôle de 'priorité solaire' pour ce modèle. Non testé en conditions réelles."
+      },
+      "fields": [
+        {
+          "key": "percent",
+          "type": "number",
+          "label": { "en": "Backup reserve level (%)", "fr": "Niveau de réserve de secours (%)" },
+          "min": 5,
+          "max": 100,
+          "required": true
+        }
+      ],
+      "timeout_seconds": 15
+    }
+  ]
+}
